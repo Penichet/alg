@@ -6,6 +6,7 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Your solution goes in this class.
@@ -158,7 +159,78 @@ public class Program1 extends AbstractProgram1 {
      * @return A stable Matching.
      */
     public Matching stableMarriageGaleShapley(Matching allocation) {
-        /* TODO implement this function */
-        return null; /* TODO remove this line */
+    	int server_slots=0;
+    	int user_count = allocation.getUserCount();
+    	ArrayList<Integer> user_matching = new ArrayList<Integer>();
+    	ArrayList<Integer> open_slots = allocation.getServerSlots();
+    	//initially all unmatched
+    	for(int usr = 0; usr < user_count; usr++) {
+    		user_matching.add(usr, -1);
+    	}
+    	allocation.setUserMatching(user_matching);
+    	Queue<Integer> free_servers = new LinkedList<Integer>();
+    	ArrayList<Queue<Integer>> PropAvail = new ArrayList<Queue<Integer>>();
+    	int count = 0;
+    	//total slots available
+    	for (int slot : allocation.getServerSlots()){
+    		server_slots += slot;
+    		free_servers.add(count);
+    		//want to copy pref list to queue to remove once they've proposed for each server?
+    		Queue<Integer> unproposed = new LinkedList<Integer>();
+    		ArrayList<Integer> pref_list = allocation.getServerPreference().get(count);
+    		//copy pref to unproposed
+    		for(int usr = 0; usr < user_count; usr++) {
+    			int pref = pref_list.get(usr);
+    			unproposed.add(pref);
+    		}
+    		PropAvail.add(unproposed);
+    		//add to propavail
+    		count++;
+    	}
+    	//at this point we have an queue of free servers, arraylist with queues of unproposed
+    	while(server_slots>0) {
+    		int server = free_servers.peek();
+    		//gets list of unproposed
+    		Queue<Integer> users_avail = PropAvail.get(server);
+    		//peeks top of the unproposed --- NEED TO REMOVE IF PROPOSAL SUCCESFUL
+    		int user_pot = users_avail.peek();
+    		//if new accepted, decrease server slots by 1, otherwise keep same as one freed one taken
+    		boolean decrease = proposecheck(allocation, server, user_pot, PropAvail, open_slots);
+    		if(decrease) {
+    			server_slots-=1;
+    		}
+    		//check here if servers are free or taken now after proposals
+    		
+    		
+    		
+    		//TODO add server matching to see if still open slots in specific server
+    		//using get server slots at top loop?
+    		
+    	}
+        return allocation; /* TODO remove this line */
     }  
+    public boolean proposecheck(Matching allocation, int server, int user, ArrayList<Queue<Integer>> PropAvail, ArrayList<Integer> open_slots) {
+    	ArrayList<Integer> new_matching = allocation.getUserMatching();
+    	int current_match = new_matching.get(user);
+    	if(current_match == -1) {
+    		//user is free, proceed with matching
+    		new_matching.set(user, server);
+    		allocation.setUserMatching(new_matching);
+    		//subtract one from open slots for server
+    		open_slots.set(server, open_slots.get(server)-1);
+    		return true;
+    	}
+    	else {
+    		//already proposed, check if prefer new server
+    		int[] usr_rank = toRankUsr(allocation, user);
+    		if(usr_rank[server] < usr_rank[current_match]) {
+    			//match to new server
+    			new_matching.set(user, server);
+    			//free old server how?
+    			open_slots.set(server, open_slots.get(server)-1);
+    			open_slots.set(current_match, open_slots.get(current_match)+1);
+    		}
+    		return false;
+    	}
+    }
 }
