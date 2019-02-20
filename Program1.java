@@ -26,9 +26,6 @@ public class Program1 extends AbstractProgram1 {
      * project documentation to help you with this.
      */
     public boolean isStableMatching(Matching allocation) {
-    	if(allocation.getUserMatching().toString().equalsIgnoreCase("[1, 2, 2, 5, 0, 2, 4, 2]")){
-    		int cat = 0;
-    	}
     	int user_count = allocation.getUserCount();
     	int server_count = allocation.getServerCount();
     	for(int usr = 0; usr< user_count; usr++) {
@@ -39,11 +36,14 @@ public class Program1 extends AbstractProgram1 {
     		if(current_matching == -1) {
     			//for every server
     			for(int srv = 0; srv< server_count; srv++) {
+    				//make array with rank as [num]
     				int[] srv_rank = toRank(allocation, srv);
     				int srv_slots = allocation.getServerSlots().get(srv);
     				int[] srv_matches = new int[srv_slots];
+    				//initializes server matches array to -1 for consistency
     				Arrays.fill(srv_matches, -1);
     				int user_num = 0;
+    				//array match count
     				int count = 0;
     				//for every integer in user matching
     				for(int potential_match : allocation.getUserMatching()) {
@@ -61,16 +61,18 @@ public class Program1 extends AbstractProgram1 {
     					//if slot is empty, it contains -1
     					int match = srv_matches[slot];
     					if(match == -1) {
+    						//if open slot in server, unstable
     						return false;
     					}
     					if(srv_rank[usr] < srv_rank[match]) {
+    						//if server prefers u' to its match, unstable
     						return false;
     					}
     				}
-    				//TO-DO, case where usr != -1
     			}
     		}
     		else {
+    			//same start as above
     			for(int srv = 0; srv< server_count; srv++) {
     				int[] srv_rank = toRank(allocation, srv);
     				int srv_slots = allocation.getServerSlots().get(srv);
@@ -91,6 +93,7 @@ public class Program1 extends AbstractProgram1 {
     				//now we have array with matches for every slot
     				//and count == number of matches
     				if(current_matching != srv) {
+    					//edge case where server has 0 slots, dont want to fail
     					if(count ==0 && srv_slots!= 0){
     						return false;
     					}
