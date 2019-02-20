@@ -11,7 +11,7 @@ public class Driver {
     public static void main(String[] args) throws Exception {
         parseArgs(args);
 
-        Matching problem = parseMatchingProblem("C:\\Users\\darkm\\Desktop\\software etc\\ProgrammingAssignment1\\ProvidedInputs\\small\\2-4-4.in");
+        Matching problem = parseMatchingProblem("C:\\Users\\admin\\Desktop\\ProvidedInputs\\small\\5-10-8.in");
         testRun(problem);
     }
 

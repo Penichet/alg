@@ -4,6 +4,7 @@
  */
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
@@ -25,25 +26,111 @@ public class Program1 extends AbstractProgram1 {
      * project documentation to help you with this.
      */
     public boolean isStableMatching(Matching allocation) {
+    	if(allocation.getUserMatching().toString().equalsIgnoreCase("[1, 2, 2, 5, 0, 2, 4, 2]")){
+    		int cat = 0;
+    	}
     	int user_count = allocation.getUserCount();
     	int server_count = allocation.getServerCount();
     	for(int usr = 0; usr< user_count; usr++) {
     		//if usr empty
-    		if(allocation.getUserMatching().get(usr)==-1) {
+    		int current_matching = allocation.getUserMatching().get(usr);
+    		//debug
+    		//System.out.println(" matching : " + allocation.getUserMatching().toString());
+    		if(current_matching == -1) {
     			//for every server
     			for(int srv = 0; srv< server_count; srv++) {
-    				//for every slot
     				int[] srv_rank = toRank(allocation, srv);
     				int srv_slots = allocation.getServerSlots().get(srv);
-    				for(int slot = 0; slot < srv_slots; slot++) {
-    					//if(srv_rank[usr] < 0)
-    					
+    				int[] srv_matches = new int[srv_slots];
+    				Arrays.fill(srv_matches, -1);
+    				int user_num = 0;
+    				int count = 0;
+    				//for every integer in user matching
+    				for(int potential_match : allocation.getUserMatching()) {
+    					// if matched to server, add to array of matches for server
+    					if(potential_match == srv){
+    						//if matched, add to array and icnrement array count
+    						srv_matches[count] = user_num;
+    						count++;
+    					}
+    					user_num++;
     				}
+    				//now we have array with matches for every slot
+    				//and count == number of matches
+    				for(int slot = 0; slot < srv_slots; slot++) {
+    					//if slot is empty, it contains -1
+    					int match = srv_matches[slot];
+    					if(match == -1) {
+    						return false;
+    					}
+    					if(srv_rank[usr] < srv_rank[match]) {
+    						return false;
+    					}
+    				}
+    				//TO-DO, case where usr != -1
     			}
     		}
+    		else {
+    			for(int srv = 0; srv< server_count; srv++) {
+    				int[] srv_rank = toRank(allocation, srv);
+    				int srv_slots = allocation.getServerSlots().get(srv);
+    				int[] srv_matches = new int[srv_slots];
+    				Arrays.fill(srv_matches, -1);
+    				int user_num = 0;
+    				int count = 0;
+    				//for every integer in user matching
+    				for(int potential_match : allocation.getUserMatching()) {
+    					// if matched to server, add to array of matches for server
+    					if(potential_match == srv){
+    						//if matched, add to array and increment array count
+    						srv_matches[count] = user_num;
+    						count++;
+    					}
+    					user_num++;
+    				}
+    				//now we have array with matches for every slot
+    				//and count == number of matches
+    				if(current_matching != srv) {
+    					if(count ==0 && srv_slots!= 0){
+    						return false;
+    					}
+	    				for(int slot = 0; slot < srv_slots; slot++) {
+	    					//if slot is empty, it contains -1
+	    					int match = srv_matches[slot];
+	    					if(match == -1) {
+	    						return false;
+	    					}
+	    					//if s prefers usr to match
+	    					if(srv_rank[usr] < srv_rank[match]) {
+	    						//if usr prefers server to usr match
+	    						int[] usr_rank = toRankUsr(allocation, usr);
+	    						if(usr_rank[srv] < usr_rank[current_matching]) {
+	    							return false;
+	    						}
+	    					}
+	    				}
+    				}
+    			}
+    			
+    		}
     	}
+    	return true;
+    }
     	
-    
+    public int[] toRankUsr(Matching match, int user){
+    	//new int array of size of server count
+    	int[] temp = new int[match.getServerCount()];
+    	// preference list for a server
+    	ArrayList<Integer> pref = match.getUserPreference().get(user);
+    	int count = 0;
+    	// for every slot, change value to rank
+    	for(int slot : pref) {
+    		temp[slot] = count;
+    		count++;
+    	}
+    	//returns rank in temp[index]
+    	return temp;
+    }
     
     public int[] toRank(Matching match, int server){
     	//new int array of size of user count
@@ -59,81 +146,6 @@ public class Program1 extends AbstractProgram1 {
     	//returns rank in temp[index]
     	return temp;
     }
-    	
-    	
-    	
-    	
-//    	int user_count = allocation.getUserMatching().size();
-//    	int server_count = allocation.getServerCount();
-//    	ArrayList<Integer> user_matching = allocation.getUserMatching();
-//    	ArrayList<Integer> server_slots = allocation.getServerSlots();
-//    	ArrayList<ArrayList<Integer>> server_preference = allocation.getServerPreference();
-//    	ArrayList<ArrayList<Integer>> user_preference = allocation.getUserPreference();
-//    	
-//    	//create list of server matching
-//    	ArrayList<ArrayList<Integer>> server_matching = new ArrayList<ArrayList<Integer>>();
-//    	ArrayList<Integer> empty = new ArrayList<Integer>();
-//    	//creates nested lists for each server
-//    	for(int srv_count = 0; srv_count < server_count; srv_count++) {
-//    		ArrayList<Integer> new_srv = new ArrayList<Integer>(); 
-//    		server_matching.add(srv_count, new_srv);
-//    	}
-//    	//for every user
-//        for(int user = 0; user<user_count;user++) {
-//        	//get matching
-//        	int server = user_matching.get(user);
-//        	//if empty, add to empty
-//        	if(server == -1) {
-//        		empty.add(user);
-//        	}
-//        	else {
-//        			//if server list exists
-//        			server_matching.get(server).add(user);
-//        		}
-//        	}
-//        //for every user
-//        for(int usr = 0; usr<user_count;usr++) {
-//        		// for every server
-//        		for(int ser = 0; ser < server_count ;ser++) {
-//        			//for every matching
-//        			for(int slo = 0; slo< server_slots.get(ser);slo++) {
-//        				int inc = 0;
-//        				int match = server_matching.get(ser).get(slo);
-//        				//while current match is not in first x of pref, incr
-//        				while(server_preference.get(ser).get(inc) != match) {
-//        				// if we find usr before current match, its unstable
-//        				    if(server_preference.get(ser).get(inc) == usr) {
-//        				    	//if u is not matched return false
-//        			        	if(user_matching.get(usr)==-1) {
-//        			        		return false;
-//        			        		}
-//        			        	//or u prefers s>s'
-//        			        	else {
-//        			        		int num = 0;
-//        			        		int new_server = user_matching.get(usr);
-//        			        		while(user_preference.get(match).get(num) != ser) {
-//        			        			//if equals new server, return false
-//        			        			if(user_preference.get(match).get(num) == new_server) {
-//        			        				return false;
-//        			        			}
-//        			        			else {
-//        			        				//increment
-//        			        				num++;
-//        			        			}
-//        			        		}
-//        			        	}
-//        				    }
-//        			        	
-//        				    else {
-//        				    	inc++;
-//        				    }
-//        			}
-//        			
-//        		}
-//        	}
-//        }
-//        
-//        return true;
 
     /**
      * Determines a solution to the Stable Marriage problem from the given input
