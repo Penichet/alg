@@ -194,14 +194,25 @@ public class Program1 extends AbstractProgram1 {
     		Queue<Integer> users_avail = PropAvail.get(server);
     		//peeks top of the unproposed --- NEED TO REMOVE IF PROPOSAL SUCCESFUL
     		int user_pot = users_avail.peek();
+    		users_avail.remove(); // remove regardless
     		//if new accepted, decrease server slots by 1, otherwise keep same as one freed one taken
     		boolean decrease = proposecheck(allocation, server, user_pot, PropAvail, open_slots);
     		if(decrease) {
     			server_slots-=1;
     		}
-    		//check here if servers are free or taken now after proposals
-    		
-    		
+    		//check here if servers are free or taken now after proposals -- NEED TO DO FOR ALL
+    		for(int srv = 0; srv < allocation.getServerCount(); srv++) {
+	    		if(free_servers.contains(srv)){ //if "free" make sure it's not got 0 spots left
+	    			if(open_slots.get(srv) == 0) {
+	    				free_servers.remove(srv);
+	    			}
+	    		}
+	    		else {
+	    			if(open_slots.get(srv)>0) { //if "closed" make sure it's not got a slot left
+	    				free_servers.add(srv);
+	    			}
+	    		}
+    		}
     		
     		//TODO add server matching to see if still open slots in specific server
     		//using get server slots at top loop?
@@ -211,10 +222,11 @@ public class Program1 extends AbstractProgram1 {
     }  
     public boolean proposecheck(Matching allocation, int server, int user, ArrayList<Queue<Integer>> PropAvail, ArrayList<Integer> open_slots) {
     	ArrayList<Integer> new_matching = allocation.getUserMatching();
-    	int current_match = new_matching.get(user);
-    	if(current_match == -1) {
+    	int current_server = new_matching.get(user);
+    	if(current_server == -1) {
     		//user is free, proceed with matching
     		new_matching.set(user, server);
+    		//update matching
     		allocation.setUserMatching(new_matching);
     		//subtract one from open slots for server
     		open_slots.set(server, open_slots.get(server)-1);
@@ -223,12 +235,14 @@ public class Program1 extends AbstractProgram1 {
     	else {
     		//already proposed, check if prefer new server
     		int[] usr_rank = toRankUsr(allocation, user);
-    		if(usr_rank[server] < usr_rank[current_match]) {
+    		if(usr_rank[server] < usr_rank[current_server]) {
     			//match to new server
     			new_matching.set(user, server);
-    			//free old server how?
+    			// update matching
+    			allocation.setUserMatching(new_matching);
+    			//free old server, take spot from new server. WOuld hypothetically onlt get here if >0
     			open_slots.set(server, open_slots.get(server)-1);
-    			open_slots.set(current_match, open_slots.get(current_match)+1);
+    			open_slots.set(current_server, open_slots.get(current_server)+1);
     		}
     		return false;
     	}
